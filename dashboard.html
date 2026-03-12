@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HBS QA Dashboard — Honeywell Building Solutions</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary:   #f2f3f5;
+    --bg-secondary: #ffffff;
+    --bg-card:      #ffffff;
+    --bg-card-alt:  #fafafa;
+    --sidebar-bg:   #1c1c1c;
+    --sidebar-hover:#2a2a2a;
+    --sidebar-sel:  #303030;
+    --header-bg:    #ffffff;
+    --border:       #dde0e6;
+    --border-mid:   #c4c8d0;
+    --text-primary: #111214;
+    --text-secondary:#4a4f5c;
+    --text-muted:   #909299;
+    --text-sidebar: #b8bcc8;
+    --text-sb-muted:#565656;
+    --hw-red:       #e2231a;
+    /* ── Colour ONLY for data viz ── */
+    --d-red:    #e2231a;
+    --d-orange: #e8630a;
+    --d-amber:  #d4920a;
+    --d-green:  #1f8f5e;
+    --d-blue:   #1460b0;
+    --d-cyan:   #0088a6;
+    --d-purple: #6b3fa0;
+    --d-grey:   #7a7f8e;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body{font-family:'Barlow',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;}
+
+  /* ── HEADER ── */
+  .header{
+    position:sticky;top:0;z-index:100;
+    background:var(--header-bg);
+    border-bottom:2px solid var(--hw-red);
+    padding:0 28px;
+    display:flex;align-items:center;justify-content:space-between;
+    height:54px;
+    box-shadow:0 1px 8px rgba(0,0,0,0.07);
+  }
+  .header-left{display:flex;align-items:center;gap:16px;}
+  .hw-mark{
+    width:32px;height:32px;background:var(--hw-red);
+    clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .hw-mark span{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;color:#fff;letter-spacing:-0.3px;}
+  .header-wordmark{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-primary);}
+  .header-divider{width:1px;height:22px;background:var(--border-mid);}
+  .header-sub{font-size:11px;color:var(--text-muted);font-weight:500;}
+  .header-right{display:flex;align-items:center;gap:14px;}
+  .live-pill{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--d-green);font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:0.5px;}
+  .live-dot{width:6px;height:6px;background:var(--d-green);border-radius:50%;animation:pulseg 2s infinite;}
+  @keyframes pulseg{0%,100%{box-shadow:0 0 0 0 rgba(31,143,94,0.4);}50%{box-shadow:0 0 0 4px rgba(31,143,94,0);}}
+  .ts{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+  .btn-export{display:flex;align-items:center;gap:5px;padding:5px 12px;background:#fff;border:1px solid var(--border-mid);border-radius:2px;color:var(--text-secondary);font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;}
+  .btn-export:hover{border-color:var(--text-primary);color:var(--text-primary);}
+
+  /* ── LAYOUT ── */
+  .layout{display:flex;height:calc(100vh - 54px);}
+
+  /* ── SIDEBAR ── */
+  .sidebar{width:248px;min-width:248px;background:var(--sidebar-bg);overflow-y:auto;padding:14px 0;}
+  .sidebar::-webkit-scrollbar{width:3px;}
+  .sidebar::-webkit-scrollbar-thumb{background:#333;}
+  .sb-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-sb-muted);padding:10px 16px 5px;}
+  .rt-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;transition:background 0.12s;border-left:3px solid transparent;}
+  .rt-hdr:hover{background:var(--sidebar-hover);}
+  .rt-hdr.active{border-left-color:var(--hw-red);background:var(--sidebar-sel);}
+  .rt-hdr-inner{display:flex;align-items:center;gap:9px;}
+  .rt-emoji{font-size:14px;width:20px;text-align:center;}
+  .rt-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-sidebar);}
+  .rt-chev{color:var(--text-sb-muted);font-size:9px;transition:transform 0.2s;}
+  .rt-hdr.open .rt-chev{transform:rotate(180deg);}
+  .rt-badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,0.07);color:#666;}
+  .prog-list{overflow:hidden;max-height:0;transition:max-height 0.28s ease;}
+  .prog-list.open{max-height:360px;}
+  .prog-item{display:flex;align-items:center;justify-content:space-between;padding:7px 16px 7px 42px;cursor:pointer;font-size:11px;color:#666;border-left:3px solid transparent;transition:all 0.12s;position:relative;}
+  .prog-item::before{content:'';position:absolute;left:30px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:#3a3a3a;transition:background 0.12s;}
+  .prog-item:hover{color:var(--text-sidebar);background:rgba(255,255,255,0.04);}
+  .prog-item:hover::before{background:#777;}
+  .prog-item.active{color:#e8e8e8;background:rgba(255,255,255,0.05);border-left-color:var(--hw-red);}
+  .prog-item.active::before{background:var(--hw-red);}
+  .prog-cnt{font-family:'JetBrains Mono',monospace;font-size:9px;color:#555;}
+
+  /* ── MAIN ── */
+  .main{flex:1;overflow-y:auto;padding:22px;background:var(--bg-primary);}
+  .main::-webkit-scrollbar{width:4px;}
+  .main::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px;}
+
+  /* ── BREADCRUMB ── */
+  .bc{display:flex;align-items:center;gap:6px;margin-bottom:16px;font-size:10px;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;}
+  .bc span{cursor:pointer;transition:color 0.12s;}
+  .bc span:hover{color:var(--text-primary);}
+  .bc .sep{color:var(--border-mid);}
+  .bc .cur{color:var(--text-primary);font-weight:700;}
+
+  /* ── SECTION HEADER ── */
+  .sec-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:16px;}
+  .sec-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;margin-bottom:2px;}
+  .sec-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-primary);line-height:1;}
+  .filter-row{display:flex;align-items:center;gap:7px;margin-top:4px;}
+  .fchip{padding:4px 11px;background:#fff;border:1px solid var(--border);border-radius:2px;font-size:10px;color:var(--text-muted);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.5px;transition:all 0.12s;}
+  .fchip.active{background:var(--text-primary);color:#fff;border-color:var(--text-primary);}
+  .fchip:hover:not(.active){border-color:var(--text-primary);color:var(--text-primary);}
+
+  /* ── DIVIDER LABEL ── */
+  .div-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .div-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* ── RT OVERVIEW CARDS ── */
+  .rt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+  .rt-card{background:var(--bg-card);border:1px solid var(--border);border-top:3px solid transparent;border-radius:3px;padding:16px;cursor:pointer;transition:all 0.15s;}
+  .rt-card.sc{border-top-color:var(--d-cyan);}
+  .rt-card.si{border-top-color:var(--d-purple);}
+  .rt-card.ap{border-top-color:var(--d-grey);}
+  .rt-card:hover{box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+  .rt-card.selected{box-shadow:0 0 0 2px var(--text-primary);}
+  .rt-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .rt-card-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-primary);}
+  .rt-card-sub{font-size:10px;color:var(--text-muted);margin-top:1px;}
+  .health-val{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;line-height:1;}
+  .health-lbl{font-size:9px;color:var(--text-muted);letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;text-align:right;}
+  .rt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding-top:10px;border-top:1px solid var(--border);}
+  .rt-stats2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding-top:8px;margin-top:8px;border-top:1px solid var(--border);}
+  .rt-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;line-height:1;color:var(--text-primary);}
+  .rt-stat-lbl{font-size:9px;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;}
+  .rt-stat-val2{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;line-height:1;color:var(--text-secondary);}
+
+  /* ── SUMMARY ROW ── */
+  .sum-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+  .sum-card{background:var(--bg-card);border:1px solid var(--border);border-radius:3px;padding:11px 10px;text-align:center;}
+  .sum-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;line-height:1;color:var(--text-primary);}
+  .sum-lbl{font-size:9px;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;text-transform:uppercase;margin-top:3px;}
+
+  /* ── KPI GRID ── */
+  .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+  .kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:3px;padding:14px;cursor:pointer;transition:all 0.15s;position:relative;}
+  .kpi-card:hover{box-shadow:0 3px 12px rgba(0,0,0,0.1);border-color:var(--border-mid);transform:translateY(-1px);}
+  .kpi-card:hover .kpi-lbl{color:var(--hw-red);}
+  .kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px;}
+  .kpi-ico{width:28px;height:28px;border-radius:3px;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .kpi-trend{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 5px;border-radius:2px;font-weight:500;}
+  .tr-bad {background:rgba(226,35,26,0.08); color:var(--d-red);}
+  .tr-ok  {background:rgba(31,143,94,0.08); color:var(--d-green);}
+  .tr-warn{background:rgba(212,146,10,0.08);color:var(--d-amber);}
+  .kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;line-height:1;color:var(--text-primary);margin-bottom:2px;}
+  .kpi-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);}
+  .kpi-sub{font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.4;}
+  .kpi-bar{margin-top:9px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
+  .kpi-fill{height:100%;border-radius:1px;transition:width 0.8s ease;}
+
+  /* ── OVERVIEW HERO ── */
+  .ov-hero{display:flex;align-items:stretch;gap:16px;margin-bottom:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:20px;overflow:hidden;position:relative;}
+  .ov-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--hw-red),var(--d-orange),var(--d-amber));}
+  .ov-hero-left{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:190px;border-right:1px solid var(--border);padding-right:20px;}
+  .ov-hero-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;text-align:center;}
+  .ov-arc-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
+  .ov-arc-center{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);text-align:center;}
+  .ov-arc-score{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:800;line-height:1;color:var(--text-primary);}
+  .ov-arc-grade{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+  .ov-hero-sub{font-size:9px;color:var(--text-muted);text-align:center;max-width:150px;line-height:1.4;}
+
+  /* ── PULSE METRICS ── */
+  .ov-pulse-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-content:center;}
+  .ov-pulse-card{background:var(--bg-primary);border:1px solid var(--border);border-radius:3px;padding:14px 12px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden;cursor:default;transition:box-shadow 0.15s;}
+  .ov-pulse-card:hover{box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+  .ov-pulse-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+  .ov-pulse-card.pc-red::after{background:var(--d-red);}
+  .ov-pulse-card.pc-green::after{background:var(--d-green);}
+  .ov-pulse-card.pc-amber::after{background:var(--d-amber);}
+  .ov-pulse-card.pc-blue::after{background:var(--d-blue);}
+  .ov-pulse-card.pc-cyan::after{background:var(--d-cyan);}
+  .ov-pulse-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);}
+  .ov-pulse-val{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;line-height:1;}
+  .ov-pulse-sub{font-size:10px;color:var(--text-muted);line-height:1.3;}
+  .ov-pulse-sparkline{margin-top:6px;height:28px;display:flex;align-items:flex-end;gap:2px;}
+  .ov-pulse-bar{flex:1;border-radius:1px;min-height:2px;opacity:0.55;transition:opacity 0.12s;}
+  .ov-pulse-bar:hover{opacity:1;}
+
+  /* ── RT HEALTH CARDS ── */
+  .ov-section-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .ov-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+  .ov-rt-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+  .ov-rt-card{background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:16px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;}
+  .ov-rt-card:hover{box-shadow:0 3px 14px rgba(0,0,0,0.09);transform:translateY(-1px);}
+  .ov-rt-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .ov-rt-card.rt-sc::before{background:var(--d-cyan);}
+  .ov-rt-card.rt-si::before{background:var(--d-purple);}
+  .ov-rt-card.rt-ap::before{background:var(--d-grey);}
+  .ov-rt-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+  .ov-rt-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-primary);}
+  .ov-rt-sub{font-size:10px;color:var(--text-muted);margin-top:1px;}
+  .ov-health-ring{position:relative;flex-shrink:0;}
+  .ov-health-ring svg{display:block;}
+  .ov-health-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ov-health-score{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;line-height:1;}
+  .ov-health-label{font-size:7px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;opacity:0.7;margin-top:1px;}
+  .ov-rt-dims{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+  .ov-rt-dim{background:var(--bg-primary);border-radius:2px;padding:7px 9px;}
+  .ov-rt-dim-lbl{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px;}
+  .ov-rt-dim-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:3px;}
+  .ov-rt-dim-fill{height:100%;border-radius:2px;transition:width 0.8s ease;}
+  .ov-rt-dim-val{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;line-height:1;}
+  .ov-rt-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);}
+  .ov-rt-prog{font-size:9px;color:var(--text-muted);}
+  .ov-rt-cta{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);opacity:0;transition:opacity 0.15s;}
+  .ov-rt-card:hover .ov-rt-cta{opacity:1;}
+
+  /* ── BOTTOM CHARTS ROW ── */
+  .ov-charts-row{display:flex;gap:12px;margin-bottom:20px;}
+
+  /* CFP - styles now inline */
+  .exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+  .exec-card{background:var(--bg-card);border:1px solid var(--border);border-radius:3px;padding:14px;text-align:center;cursor:pointer;transition:all 0.15s;}
+  .exec-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+  .ring-wrap{position:relative;width:66px;height:66px;margin:0 auto 9px;}
+  .ring-wrap svg{transform:rotate(-90deg);}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .ring-pct{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;line-height:1;}
+  .exec-name{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:3px;}
+  .exec-stats{display:flex;justify-content:center;gap:8px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);}
+
+  /* ── CHARTS ── */
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+  .chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:3px;padding:16px;}
+  .chart-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+  .bar-chart{display:flex;align-items:flex-end;gap:7px;height:116px;}
+  .bar-group{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .bar-stack{width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:100px;gap:2px;}
+  .bar-seg{width:100%;border-radius:1px;min-height:2px;transition:opacity 0.12s;}
+  .bar-seg:hover{opacity:0.7;}
+  .bar-lbl{font-size:8px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;text-align:center;}
+  .bar-tot{font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--text-muted);margin-bottom:2px;}
+  .donut-wrap{display:flex;align-items:center;gap:18px;}
+  .donut-legend{display:flex;flex-direction:column;gap:7px;}
+  .leg-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary);}
+  .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .leg-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;margin-left:auto;min-width:26px;text-align:right;color:var(--text-primary);}
+
+  /* ── DETAIL PANEL ── */
+  .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:3px;margin-bottom:20px;overflow:hidden;}
+  .panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);}
+  .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-primary);}
+
+  /* ── TABS ── */
+  .tab-row{display:flex;border-bottom:1px solid var(--border);background:var(--bg-card-alt);}
+  .tab{padding:9px 15px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.12s;margin-bottom:-1px;}
+  .tab:hover{color:var(--text-secondary);}
+  .tab.active{color:var(--text-primary);border-bottom-color:var(--hw-red);}
+  .tab-content{display:none;padding:16px;}
+  .tab-content.active{display:block;}
+
+  /* ── TABLES ── */
+  .tbl{width:100%;border-collapse:collapse;font-size:11px;}
+  .tbl th{text-align:left;padding:7px 9px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg-primary);}
+  .tbl td{padding:8px 9px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:middle;}
+  .tbl tr:hover td{background:var(--bg-primary);color:var(--text-primary);}
+  .tbl tr:last-child td{border-bottom:none;}
+
+  /* ── BADGES ── */
+  .sbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:2px;font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap;}
+  .sbadge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;}
+  .b-open       {background:rgba(226,35,26,0.07);  color:var(--d-red);   border:1px solid rgba(226,35,26,0.18);}
+  .b-resolved   {background:rgba(31,143,94,0.07);  color:var(--d-green); border:1px solid rgba(31,143,94,0.18);}
+  .b-in-progress{background:rgba(212,146,10,0.07); color:var(--d-amber); border:1px solid rgba(212,146,10,0.18);}
+  .b-closed     {background:rgba(20,96,176,0.07);  color:var(--d-blue);  border:1px solid rgba(20,96,176,0.15);}
+  .b-blocked    {background:rgba(107,63,160,0.07); color:var(--d-purple);border:1px solid rgba(107,63,160,0.15);}
+  .svbadge{display:inline-block;padding:1px 5px;border-radius:1px;font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:500;text-transform:uppercase;}
+  .sv-critical{background:rgba(226,35,26,0.07);  color:var(--d-red);   border:1px solid rgba(226,35,26,0.18);}
+  .sv-high    {background:rgba(232,99,10,0.07);  color:var(--d-orange);border:1px solid rgba(232,99,10,0.18);}
+  .sv-medium  {background:rgba(212,146,10,0.07); color:var(--d-amber); border:1px solid rgba(212,146,10,0.18);}
+  .sv-low     {background:rgba(0,136,166,0.07);  color:var(--d-cyan);  border:1px solid rgba(0,136,166,0.15);}
+  .id-lnk{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--d-blue);}
+
+  /* ── MATRIX ── */
+  .mx-cell{height:30px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;transition:transform 0.1s;}
+  .mx-cell:hover{transform:scale(1.07);z-index:2;position:relative;}
+  .mx-hdr{height:26px;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.5px;color:var(--text-muted);text-transform:uppercase;}
+  .mx-row-lbl{display:flex;align-items:center;font-size:10px;color:var(--text-secondary);font-family:'Barlow Condensed',sans-serif;font-weight:600;padding-right:6px;white-space:nowrap;}
+
+  /* ── PROGRAMME DRILL ── */
+  .drill-hdr{display:flex;align-items:center;gap:12px;padding:14px 0;margin-bottom:16px;border-bottom:1px solid var(--border);}
+  .drill-ico{width:40px;height:40px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.5px;background:var(--hw-red);color:#fff;flex-shrink:0;}
+  .drill-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-primary);}
+  .drill-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+  /* ── VIEWS ── */
+  .view{display:none;}
+  .view.active{display:block;animation:fi 0.22s ease;}
+  @keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ── EMPTY / COMING SOON ── */
+  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--text-muted);gap:9px;}
+  .empty-ico{font-size:34px;opacity:0.25;}
+  .empty-txt{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .coming{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;gap:14px;color:var(--text-muted);text-align:center;}
+  .coming-ico{font-size:50px;opacity:0.2;}
+  .coming-ttl{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);}
+  .coming-sub{font-size:12px;max-width:270px;line-height:1.6;}
+
+  /* ── TABLE FOOTER ── */
+  .sb-group-hdr{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-muted);padding:7px 14px 3px;margin-top:2px;border-top:1px solid var(--border);}
+  .prog-item-child{padding-left:22px!important;}
+
+  /* ── INLINE DRILL PANEL ── */
+  .drill-panel{
+    display:none;
+    background:var(--bg-card);
+    border:2px solid var(--hw-red);
+    border-radius:4px;
+    margin-bottom:20px;
+    overflow:hidden;
+    animation:drillSlide 0.2s ease;
+  }
+  .drill-panel.open{display:block;}
+  @keyframes drillSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .drill-panel-head{
+    background:var(--hw-red);
+    padding:10px 16px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .drill-panel-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#fff;}
+  .drill-panel-prog{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.65);padding:2px 8px;background:rgba(0,0,0,0.15);border-radius:2px;}
+  .drill-panel-close{margin-left:auto;background:rgba(255,255,255,0.2);border:none;color:#fff;width:22px;height:22px;border-radius:3px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background 0.12s;}
+  .drill-panel-close:hover{background:rgba(255,255,255,0.35);}
+  .drill-panel-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg-primary);}
+  .drill-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:3px;padding:10px 12px;text-align:center;}
+  .drill-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;line-height:1;}
+  .drill-stat-lbl{font-size:9px;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.5px;margin-top:3px;}
+  .drill-panel-body{padding:16px;overflow-x:auto;}
+
+  /* ── CFP BANNER ── */
+  .cfp-banner{background:var(--bg-primary);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  .cfp-main{}
+  .cfp-main-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:1px;}
+  .cfp-main-val{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;line-height:1;}
+  .cfp-main-sub{font-size:10px;color:var(--text-muted);margin-top:2px;}
+  .vdiv{width:1px;height:42px;background:var(--border);flex-shrink:0;}
+  .cfp-stats{display:grid;grid-template-columns:repeat(4,auto);gap:16px;align-items:center;}
+  .cfp-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;line-height:1;text-align:center;}
+  .cfp-stat-lbl{font-size:9px;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;text-align:center;}
+  .cfp-trend{margin-left:auto;text-align:right;flex-shrink:0;}
+  .cfp-trend-lbl{font-size:9px;color:var(--text-muted);margin-bottom:2px;}
+  .cfp-trend-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;}
+  .cfp-trend-prev{font-size:9px;color:var(--text-muted);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="load-overlay" style="
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(242,243,245,0.97);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:12px;">
+  <div style="width:36px;height:36px;border:3px solid #dde0e6;border-top-color:#e2231a;border-radius:50%;animation:spin 0.7s linear infinite"></div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#909299">Loading dashboard data…</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<header class="header">
+  <div class="header-left">
+    <div class="hw-mark"><span>HW</span></div>
+    <div class="header-wordmark">HBS V&V</div>
+    <div class="header-divider"></div>
+    <div class="header-sub">Honeywell Building Solutions · V&V Overview</div>
+  </div>
+  <div class="header-right">
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <div class="ts" id="ts">—</div>
+    <button class="btn-export" onclick="exportData()">⬇ Export</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sb-label">Release Trains</div>
+
+    <div>
+      <div class="rt-hdr open active" id="rt-sc" onclick="toggleRT('sc',this)">
+        <div class="rt-hdr-inner"><div class="rt-name">Smart City</div></div>
+        <div style="display:flex;align-items:center;gap:5px"><span class="rt-badge">4</span><span class="rt-chev">▾</span></div>
+      </div>
+      <div class="prog-list open" id="pl-sc">
+        <div class="prog-item active" onclick="selProg('sc','city-suite',this)"><span>City Suite 5.0</span><span class="prog-cnt">14</span></div>
+        <div class="prog-item" onclick="selProg('sc','community-suite',this)"><span>Community Suite 2.0</span><span class="prog-cnt">8</span></div>
+        <div class="prog-item" onclick="selProg('sc','cognitive-suite',this)"><span>Cognitive Suite</span><span class="prog-cnt">21</span></div>
+        <div class="prog-item" onclick="selProg('sc','proj-validations',this)"><span>Project Validations</span><span class="prog-cnt">5</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="rt-hdr" id="rt-si" onclick="toggleRT('si',this)">
+        <div class="rt-hdr-inner"><div class="rt-name">Sys Integrations</div></div>
+        <div style="display:flex;align-items:center;gap:5px"><span class="rt-badge">7</span><span class="rt-chev">▾</span></div>
+      </div>
+      <div class="prog-list" id="pl-si">
+        <div class="sb-group-hdr">EBI – Security</div>
+        <div class="prog-item prog-item-child" onclick="selProg('si','ebi-lenel',this)"><span>EBI – Lenel</span><span class="prog-cnt">17</span></div>
+        <div class="sb-group-hdr">EBI – BMS</div>
+        <div class="prog-item prog-item-child" onclick="selProg('si','ebi-connected-power',this)"><span>EBI – Connected Power</span><span class="prog-cnt">9</span></div>
+        <div class="sb-group-hdr">EBI – Fire</div>
+        <div class="sb-group-hdr">EBI – DVM Platform LSIT</div>
+        <div class="sb-group-hdr">Custom Apps</div>
+        <div class="prog-item prog-item-child" onclick="selProg('si','custom-apps',this)"><span>Custom Apps</span><span class="prog-cnt">6</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="rt-hdr" id="rt-ap" onclick="toggleRT('ap',this)">
+        <div class="rt-hdr-inner"><span class="rt-name">Airports</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><span class="rt-badge">1</span><span class="rt-chev">▾</span></div>
+      </div>
+      <div class="prog-list" id="pl-ap">
+        <div class="prog-item" onclick="selProg('ap','airports-terminal',this)"><span>Terminal Management</span><span class="prog-cnt">11</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div class="view active" id="v-overview">
+
+      <!-- HERO: Org score + pulse metrics -->
+      <div class="ov-hero">
+        <div class="ov-hero-left">
+          <div class="ov-hero-eyebrow">Organisation Health Score</div>
+          <div id="ov-score-tile" style="width:130px;height:100px;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:6px;background:var(--border);">
+            <div id="ov-org-score" style="font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:800;line-height:1;color:#fff;">—</div>
+            <div id="ov-org-grade" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);margin-top:2px;">—</div>
+          </div>
+          <div class="ov-hero-sub">Composite across all Release Trains</div>
+        </div>
+        <div class="ov-pulse-grid" id="ov-pulse"></div>
+      </div>
+
+      <!-- RT HEALTH CARDS -->
+      <div class="ov-section-label">Release Train Health</div>
+      <div class="ov-rt-row" id="ov-rt-health"></div>
+
+      <!-- BOTTOM ROW: charts -->
+      <div class="ov-charts-row">
+        <div class="chart-card" style="flex:1.4">
+          <div class="chart-title">Defect Trend — By RT <span style="font-size:9px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">Last 6 Sprints</span></div>
+          <div class="bar-chart" id="ov-bar"></div>
+          <div style="display:flex;gap:12px;margin-top:9px">
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text-muted)"><div style="width:8px;height:8px;border-radius:1px;background:var(--d-cyan)"></div>Smart City</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text-muted)"><div style="width:8px;height:8px;border-radius:1px;background:var(--d-purple)"></div>Sys Integrations</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text-muted)"><div style="width:8px;height:8px;border-radius:1px;background:var(--d-grey)"></div>Airports</div>
+          </div>
+        </div>
+        <div class="chart-card" style="flex:1">
+          <div class="chart-title">Defect Severity Split</div>
+          <div class="donut-wrap" id="ov-donut"></div>
+        </div>
+        <div class="chart-card" style="flex:1">
+          <div class="chart-title">Build Gate Results</div>
+          <div id="ov-matrix" style="margin-top:4px"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PROGRAMME DETAIL -->
+    <div class="view" id="v-prog">
+      <div class="bc" id="p-bc"></div>
+      <div class="drill-hdr">
+        <div class="drill-ico" id="p-ico"></div>
+        <div><div class="drill-name" id="p-title"></div><div class="drill-meta" id="p-meta"></div></div>
+      </div>
+      <div class="div-label">Key Performance Indicators</div>
+      <div class="kpi-grid" id="p-kpis"></div>
+
+      <!-- INLINE DRILL PANELS -->
+      <div class="drill-panel" id="dp-ipd">
+        <div class="drill-panel-head">
+          <div class="drill-panel-title" id="dp-ipd-title">IN-PROGRESS DEFECTS</div>
+          <span class="drill-panel-prog" id="dp-ipd-prog"></span>
+          <button class="drill-panel-close" onclick="closeDrillPanel('dp-ipd')">✕</button>
+        </div>
+        <div class="drill-panel-stats" id="dp-ipd-stats"></div>
+        <div class="drill-panel-body" id="dp-ipd-body"></div>
+      </div>
+
+      <div class="drill-panel" id="dp-prd">
+        <div class="drill-panel-head">
+          <div class="drill-panel-title">PRD DEFECTS</div>
+          <span class="drill-panel-prog" id="dp-prd-prog"></span>
+          <button class="drill-panel-close" onclick="closeDrillPanel('dp-prd')">✕</button>
+        </div>
+        <div class="drill-panel-stats" id="dp-prd-stats"></div>
+        <div class="drill-panel-body" id="dp-prd-body"></div>
+      </div>
+
+      <div class="drill-panel" id="dp-br">
+        <div class="drill-panel-head">
+          <div class="drill-panel-title">BUILD REJECTIONS</div>
+          <span class="drill-panel-prog" id="dp-br-prog"></span>
+          <button class="drill-panel-close" onclick="closeDrillPanel('dp-br')">✕</button>
+        </div>
+        <div class="drill-panel-stats" id="dp-br-stats"></div>
+        <div class="drill-panel-body" id="dp-br-body"></div>
+      </div>
+
+      <div class="drill-panel" id="dp-tc">
+        <div class="drill-panel-head">
+          <div class="drill-panel-title">TEST CASES</div>
+          <span class="drill-panel-prog" id="dp-tc-prog"></span>
+          <button class="drill-panel-close" onclick="closeDrillPanel('dp-tc')">✕</button>
+        </div>
+        <div class="drill-panel-stats" id="dp-tc-stats"></div>
+        <div class="drill-panel-body" id="dp-tc-body"></div>
+      </div>
+
+      <div class="drill-panel" id="dp-cov">
+        <div class="drill-panel-head">
+          <div class="drill-panel-title">EPIC COVERAGE</div>
+          <span class="drill-panel-prog" id="dp-cov-prog"></span>
+          <button class="drill-panel-close" onclick="closeDrillPanel('dp-cov')">✕</button>
+        </div>
+        <div class="drill-panel-stats" id="dp-cov-stats"></div>
+        <div class="drill-panel-body" id="dp-cov-body"></div>
+      </div>
+
+      <div class="div-label">Test Execution Status</div>
+      <div class="exec-grid" id="p-exec"></div>
+      <div class="panel">
+        <div class="tab-row">
+          <div class="tab active" onclick="swTab('in-progress-defects',this)">In-Progress Defects</div>
+          <div class="tab" onclick="swTab('prd-defects',this)">PRD Defects</div>
+          <div class="tab" onclick="swTab('build-rejection',this)">Build Rejection</div>
+          <div class="tab" onclick="swTab('test-cases',this)">Test Cases</div>
+        </div>
+        <div class="tab-content active" id="tab-in-progress-defects"><div id="c-ipd"></div></div>
+        <div class="tab-content" id="tab-prd-defects"><div id="c-prd"></div></div>
+        <div class="tab-content" id="tab-build-rejection"><div id="c-br"></div></div>
+        <div class="tab-content" id="tab-test-cases"><div id="c-tc"></div></div>
+      </div>
+    </div>
+
+    <!-- AIRPORTS now navigates directly to programme detail via selRT('ap') -->
+
+  </main>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  DATA  — loaded from backend API
+// ════════════════════════════════════════
+let D = {};       // populated by loadData()
+let TREND = {};   // populated by loadData()
+
+const API = 'http://localhost:5000/api/data';
+
+async function loadData() {
+  showLoadingState();
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+
+    // json.programmes is keyed by programme key — matches old D structure
+    D     = json.programmes;
+    TREND = json.trend || {};
+
+    hideLoadingState();
+    bootDashboard();
+  } catch (err) {
+    showErrorState(err.message);
+  }
+}
+
+function showLoadingState() {
+  const el = document.getElementById('load-overlay');
+  if (el) el.style.display = 'flex';
+}
+function hideLoadingState() {
+  const el = document.getElementById('load-overlay');
+  if (el) el.style.display = 'none';
+}
+function showErrorState(msg) {
+  const el = document.getElementById('load-overlay');
+  if (el) {
+    el.innerHTML = `
+      <div style="text-align:center;max-width:420px">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#e2231a;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Cannot load data</div>
+        <div style="font-size:12px;color:#666;margin-bottom:16px">${msg}</div>
+        <div style="font-size:11px;color:#999;background:#f8f8f8;border:1px solid #ddd;border-radius:4px;padding:10px;text-align:left;font-family:monospace">
+          1. Make sure the backend is running:<br>
+          &nbsp;&nbsp;<b>python server.py</b><br><br>
+          2. Ensure <b>HBS_QA_Data.xlsx</b> is in the <b>data/</b> folder<br><br>
+          3. Reload this page
+        </div>
+        <button onclick="loadData()" style="margin-top:14px;padding:8px 20px;background:#e2231a;color:#fff;border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Retry</button>
+      </div>`;
+  }
+}
+
+function bootDashboard() {
+  updateTs();
+  renderSidebar();
+  renderOverview();
+  renderOvBar();
+  renderOvDonut();
+  renderOvMatrix();
+  showOv();
+}
+
+// Dynamically build sidebar from loaded data
+function renderSidebar() {
+  // Group programmes by RT
+  const rts = {};
+  Object.values(D).forEach(p => {
+    if (!rts[p.rtKey]) rts[p.rtKey] = { label: p.rt, progs: [] };
+    rts[p.rtKey].progs.push(p);
+  });
+
+  // Update rt badges
+  Object.entries(rts).forEach(([key, rt]) => {
+    const badge = document.querySelector(`#rt-${key} .rt-badge`);
+    if (badge) badge.textContent = rt.progs.length;
+    const list = document.getElementById(`pl-${key}`);
+    if (!list) return;
+    // preserve group headers, rebuild prog items
+    const existingHeaders = Array.from(list.querySelectorAll('.sb-group-hdr')).map(h => h.outerHTML);
+    const items = rt.progs.map(p =>
+      `<div class="prog-item" onclick="selProg('${p.rtKey}','${p.key}',this)">
+         <span>${p.name}</span>
+         <span class="prog-cnt">${p.ipd.filter(x=>x.status!=='resolved').length}</span>
+       </div>`
+    ).join('');
+    list.innerHTML = items;
+  });
+}
+// ── NAV ──
+function showOv(){$('v-overview').classList.add('active');$('v-prog').classList.remove('active');}
+function showProg(){$('v-overview').classList.remove('active');$('v-prog').classList.add('active');}
+function $(id){return document.getElementById(id);}
+
+function toggleRT(rt,el){
+  const l=$('pl-'+rt); const open=l.classList.contains('open');
+  l.classList.toggle('open',!open); el.classList.toggle('open',!open);
+}
+function selRT(rt){const fp=rt==='sc'?'city-suite':rt==='si'?'ebi-lenel':'airports-terminal';$('pl-'+rt).classList.add('open');$('rt-'+rt).classList.add('open');loadProg(fp);}
+function selProg(rt,key,el){document.querySelectorAll('.prog-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');loadProg(key);}
+function setF(el){document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));el.classList.add('active');}
+function swTab(name,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));el.classList.add('active');$('tab-'+name).classList.add('active');}
+// ── INLINE DRILL PANELS ──
+let _drillData = null;
+
+function goTab(name){
+  if(!_drillData) return;
+  const map = {'in-progress-defects':'ipd','prd-defects':'prd','build-rejection':'br','test-cases':'tc','coverage':'cov'};
+  const key = map[name] || name;
+  openDrillPanel(key, _drillData);
+}
+
+function openDrillPanel(key, d){
+  // Close all panels first
+  document.querySelectorAll('.drill-panel').forEach(p=>p.classList.remove('open'));
+
+  const progName = $('p-title').textContent || '';
+  const panelId = 'dp-'+key;
+  const panel = $(panelId); if(!panel) return;
+
+  // Set programme label
+  const progEl = $(panelId+'-prog');
+  if(progEl) progEl.textContent = progName;
+
+  // Populate stats + body
+  if(key==='ipd'){
+    const open=d.ipd.filter(x=>x.status!=='resolved').length;
+    const resolved=d.ipd.filter(x=>x.status==='resolved').length;
+    const total=d.ipd.length;
+    $('dp-ipd-stats').innerHTML=drillStats([
+      {val:total,   lbl:'Total',    col:'var(--text-primary)'},
+      {val:open,    lbl:'Open',     col:'var(--d-red)'},
+      {val:resolved,lbl:'Resolved', col:'var(--d-green)'},
+      {val:total===0?100:pct(resolved,total), lbl:'Resolved %', col:'var(--d-cyan)', suffix:'%'},
+    ]);
+    $('dp-ipd-body').innerHTML = buildIPDHtml(d);
+  } else if(key==='prd'){
+    const open=d.prd.filter(x=>x.status!=='resolved').length;
+    const resolved=d.prd.filter(x=>x.status==='resolved').length;
+    const total=d.prd.length;
+    const crit=d.prd.filter(x=>x.cfp==='CFP-1').length;
+    $('dp-prd-stats').innerHTML=drillStats([
+      {val:open,    lbl:'Open',     col:'var(--d-amber)'},
+      {val:resolved,lbl:'Resolved', col:'var(--d-green)'},
+      {val:total,   lbl:'Total',    col:'var(--d-blue)'},
+      {val:crit,    lbl:'CFP-1',    col:'var(--d-red)'},
+    ]);
+    $('dp-prd-body').innerHTML = buildPRDHtml(d);
+  } else if(key==='br'){
+    const total=d.br.length;
+    const rejected=d.br.filter(x=>!x.resolved).length;
+    const passed=d.br.filter(x=>x.resolved).length;
+    $('dp-br-stats').innerHTML=drillStats([
+      {val:total,   lbl:'Received', col:'var(--text-primary)'},
+      {val:rejected,lbl:'Rejected', col:'var(--d-red)'},
+      {val:passed,  lbl:'Passed',   col:'var(--d-green)'},
+      {val:total===0?100:pct(passed,total), lbl:'Pass Rate', col:'var(--d-cyan)', suffix:'%'},
+    ]);
+    $('dp-br-body').innerHTML = buildBRHtml(d);
+  } else if(key==='tc'){
+    const k=d.kpis.tc;
+    const pr=pct(k.pass,k.executed);
+    $('dp-tc-stats').innerHTML=drillStats([
+      {val:k.total,   lbl:'Total Cases', col:'var(--text-primary)'},
+      {val:k.executed,lbl:'Executed',    col:'var(--d-cyan)'},
+      {val:k.pass,    lbl:'Passed',      col:'var(--d-green)'},
+      {val:pr,        lbl:'Pass Rate',   col:pr>=90?'var(--d-green)':pr>=75?'var(--d-amber)':'var(--d-red)', suffix:'%'},
+    ]);
+    $('dp-tc-body').innerHTML = buildTCHtml(d);
+  } else if(key==='cov'){
+    const cov = d.coverage || {covered:0,total:0,epics:[]};
+    const covPct = pct(cov.covered, cov.total);
+    const notCovered = cov.total - cov.covered;
+    const covCol = covPct>=80?'var(--d-green)':covPct>=60?'var(--d-amber)':'var(--d-red)';
+    $('dp-cov-stats').innerHTML=drillStats([
+      {val:cov.total,   lbl:'Total Epics',   col:'var(--text-primary)'},
+      {val:cov.covered, lbl:'Covered',        col:'var(--d-green)'},
+      {val:notCovered,  lbl:'Not Covered',    col:'var(--d-red)'},
+      {val:covPct,      lbl:'Coverage',       col:covCol, suffix:'%'},
+    ]);
+    $('dp-cov-body').innerHTML = buildCoverageHtml(d);
+  }
+
+  panel.classList.add('open');
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth', block:'nearest'}), 60);
+}
+
+function drillStats(items){
+  return items.map(s=>`
+    <div class="drill-stat">
+      <div class="drill-stat-val" style="color:${s.col}">${s.val}${s.suffix||''}</div>
+      <div class="drill-stat-lbl">${s.lbl}</div>
+    </div>`).join('');
+}
+
+function closeDrillPanel(id){
+  $(id).classList.remove('open');
+}
+
+// Escape key closes all panels
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.drill-panel').forEach(p=>p.classList.remove('open')); });
+
+function buildIPDHtml(d){
+  const items=d.ipd;
+  if(!items.length) return `<div class="empty"><div class="empty-ico" style="font-size:28px;opacity:0.2">—</div><div class="empty-txt">No defects on record</div></div>`;
+  const openCount=items.filter(x=>x.status==='open').length;
+  const resolvedCount=items.filter(x=>x.status==='resolved').length;
+  let h=`<div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)"><span class="sbadge b-open">Open</span>${openCount}</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)"><span class="sbadge b-resolved">Resolved</span>${resolvedCount}</div>
+  </div>
+  <table class="tbl"><thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Status</th><th>Owner</th><th>Sprint</th><th>Age</th></tr></thead><tbody>`;
+  items.forEach(x=>{
+    const statusLabel=x.status==='resolved'?'Resolved':'Open';
+    const statusCls=x.status==='resolved'?'b-resolved':'b-open';
+    h+=`<tr><td><span class="id-lnk">${x.id}</span></td><td style="max-width:260px;color:var(--text-primary)">${x.title}</td>
+      <td><span class="svbadge sv-${x.sev}">${x.sev.toUpperCase()}</span></td>
+      <td><span class="sbadge ${statusCls}">${statusLabel}</span></td>
+      <td>${x.owner}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${x.sprint}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${x.age>14?'var(--d-red)':x.age>7?'var(--d-amber)':'var(--text-secondary)'}">${x.age}d${x.age>14?' ⚠':''}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table><div class="tbl-foot"><span>${items.length} defects</span><span>Source: HBS_Defects_*.xlsx</span></div>`;
+  return h;
+}
+
+function buildPRDHtml(d){
+  const items=d.prd; const c=d.kpis.cfp;
+  const cfpTotal=c.cfp1+c.cfp2+c.cfp3+c.cfp4;
+  const cats=[
+    {key:'CFP-1',val:c.cfp1,col:'var(--d-red)',   desc:'Critical defect — must fix immediately'},
+    {key:'CFP-2',val:c.cfp2,col:'var(--d-orange)',desc:'Major defect — affects performance or reliability'},
+    {key:'CFP-3',val:c.cfp3,col:'var(--d-amber)', desc:'Minor defect — cosmetic or low-impact issue'},
+    {key:'CFP-4',val:c.cfp4,col:'var(--d-grey)',  desc:'Very minor / informational defect'},
+  ];
+  let h=`<div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:1px">Customer-Facing Problems (CFP)</div>
+      <div style="font-size:11px;color:var(--text-secondary)">${cfpTotal} total CFP defects across 4 categories</div></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--text-primary)">${cfpTotal} <span style="font-size:11px;font-weight:400;color:var(--text-muted)">total</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      ${cats.map(cat=>`<div style="background:#fff;border:1px solid var(--border);border-left:3px solid ${cat.col};border-radius:2px;padding:10px 12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:${cat.col}">${cat.key}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:${cat.val>0?cat.col:'var(--text-muted)'};line-height:1">${cat.val}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);line-height:1.4">${cat.desc}</div>
+      </div>`).join('')}
+    </div></div>`;
+  if(!items.length) return h+`<div class="empty"><div class="empty-txt">No PRD defects on record</div></div>`;
+  h+=`<table class="tbl"><thead><tr><th>PRD ID</th><th>Title</th><th>CFP Category</th><th>Severity</th><th>Status</th><th>Reported By</th><th>Date Raised</th></tr></thead><tbody>`;
+  items.forEach(x=>{
+    const cfpCol=x.cfp==='CFP-1'?'var(--d-red)':x.cfp==='CFP-2'?'var(--d-orange)':x.cfp==='CFP-3'?'var(--d-amber)':'var(--d-grey)';
+    h+=`<tr><td><span class="id-lnk">${x.id}</span></td><td style="max-width:240px;color:var(--text-primary)">${x.title}</td>
+      <td><span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:${cfpCol};background:${cfpCol.replace(')',',0.07)').replace('var(','rgba(').replace(')',')')};border:1px solid ${cfpCol.replace(')',',0.2)').replace('var(','rgba(').replace(')',')')};padding:2px 6px;border-radius:2px">${x.cfp||'—'}</span></td>
+      <td><span class="svbadge sv-${x.sev}">${x.sev.toUpperCase()}</span></td>
+      <td><span class="sbadge b-${x.status.replace(' ','-')}">${x.status.replace('-',' ')}</span></td>
+      <td>${x.by}</td><td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${x.date}</td></tr>`;
+  });
+  h+=`</tbody></table><div class="tbl-foot"><span>${items.length} PRD defects</span><span>Source: HBS_PRD_Defects_*.xlsx</span></div>`;
+  return h;
+}
+
+function buildBRHtml(d){
+  const items=d.br;
+  if(!items.length) return `<div class="empty"><div class="empty-txt">No Build Rejections — All builds passed QA gates</div></div>`;
+  let h=`<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px">`;
+  items.forEach(r=>{
+    const passed=r.resolved;
+    const bc=passed?'rgba(31,143,94,0.07)':'rgba(226,35,26,0.06)';
+    const bdr=passed?'rgba(31,143,94,0.2)':'rgba(226,35,26,0.2)';
+    h+=`<div style="background:${bc};border:1px solid ${bdr};border-radius:3px;padding:11px 14px;min-width:205px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="id-lnk">${r.build}</span>
+        <span class="sbadge ${passed?'b-resolved':'b-open'}">${passed?'Passed':'Rejected'}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-primary);margin-bottom:4px">${r.reason}</div>
+      <div style="font-size:9px;color:var(--text-muted)">By: ${r.by} · ${r.date}</div>
+    </div>`;
+  });
+  h+=`</div><table class="tbl"><thead><tr><th>Build</th><th>Date</th><th>Rejection Reason</th><th>Rejected By</th><th>Result</th></tr></thead><tbody>`;
+  items.forEach(r=>{
+    const passed=r.resolved;
+    h+=`<tr><td><span class="id-lnk">${r.build}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${r.date}</td>
+      <td style="color:var(--text-primary)">${r.reason}</td><td>${r.by}</td>
+      <td><span class="sbadge ${passed?'b-resolved':'b-open'}">${passed?'Passed':'Rejected'}</span></td></tr>`;
+  });
+  h+=`</tbody></table><div class="tbl-foot"><span>${items.length} build(s) · ${items.filter(x=>!x.resolved).length} rejected · ${items.filter(x=>x.resolved).length} passed</span><span>Source: HBS_BuildRejection_*.xlsx</span></div>`;
+  return h;
+}
+
+function buildTCHtml(d){
+  const ss=d.tc;
+  if(!ss.length) return `<div class="empty"><div class="empty-txt">No test cases on record</div></div>`;
+  let h=`<table class="tbl"><thead><tr><th>Suite ID</th><th>Test Suite</th><th>Total</th><th>Executed</th><th>Passed</th><th>Failed</th><th>Skipped</th><th>Pass Rate</th><th>Last Run</th></tr></thead><tbody>`;
+  ss.forEach(s=>{
+    const pr=pct(s.pass,s.pass+s.fail); const er=pct(s.pass+s.fail+s.skip,s.total);
+    const prc=pr>=90?'var(--d-green)':pr>=75?'var(--d-amber)':'var(--d-red)';
+    h+=`<tr><td><span class="id-lnk">${s.id}</span></td>
+      <td style="color:var(--text-primary);font-weight:500">${s.suite}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px">${s.total}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px">${s.pass+s.fail+s.skip}</span>
+        <div style="flex:1;height:2px;background:var(--border);border-radius:1px;min-width:44px"><div style="width:${er}%;height:100%;background:var(--d-cyan);border-radius:1px"></div></div>
+        <span style="font-size:9px;color:var(--text-muted)">${er}%</span>
+      </div></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--d-green)">✓ ${s.pass}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${s.fail>0?'var(--d-red)':'var(--text-muted)'}">${s.fail>0?'✗ ':''}${s.fail}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted)">${s.skip}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:4px;background:var(--border);border-radius:2px;min-width:44px"><div style="width:${pr}%;height:100%;background:${prc};border-radius:2px"></div></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:${prc};min-width:30px">${pr}%</span>
+      </div></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${s.run}</td>
+    </tr>`;
+  });
+  const tot=ss.reduce((a,s)=>({total:a.total+s.total,pass:a.pass+s.pass,fail:a.fail+s.fail,skip:a.skip+s.skip}),{total:0,pass:0,fail:0,skip:0});
+  const tpr=pct(tot.pass,tot.pass+tot.fail);
+  h+=`<tr style="background:var(--bg-primary)">
+    <td colspan="2" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--text-secondary)">TOTAL</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600">${tot.total}</td><td></td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--d-green)">✓ ${tot.pass}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--d-red)">✗ ${tot.fail}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted)">${tot.skip}</td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${tpr>=90?'var(--d-green)':tpr>=75?'var(--d-amber)':'var(--d-red)'}">${tpr}%</span></td><td></td>
+  </tr>`;
+  h+=`</tbody></table><div class="tbl-foot"><span>${ss.length} suites · ${tot.total} cases</span><span>Source: HBS_TestCases_*.xlsx</span></div>`;
+  return h;
+}
+
+// ── COVERAGE DRILL ──
+function buildCoverageHtml(d){
+  const cov = d.coverage || {covered:0,total:0,epics:[]};
+  if(cov.total===0) return `<div class="empty"><div class="empty-txt">No coverage data on record</div></div>`;
+
+  const covPct = pct(cov.covered, cov.total);
+  const covCol = covPct>=80?'var(--d-green)':covPct>=60?'var(--d-amber)':'var(--d-red)';
+
+  // Build full epic list: covered ones first, then gaps labelled as not covered
+  // We'll show all covered epics + placeholder "not covered" rows for the gap
+  const coveredList = cov.epics; // these are covered
+  const notCoveredCount = cov.total - cov.covered;
+
+  let h = `
+  <div style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted)">Overall Progress</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:${covCol}">${cov.covered} / ${cov.total} epics — ${covPct}%</span>
+    </div>
+    <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+      <div style="width:${covPct}%;height:100%;background:${covCol};border-radius:4px;transition:width 0.5s ease"></div>
+    </div>
+  </div>
+  <table class="tbl"><thead><tr>
+    <th style="width:36px;text-align:center">#</th>
+    <th>Epic / Feature</th>
+    <th style="width:120px">Status</th>
+    <th style="width:160px">Coverage</th>
+  </tr></thead><tbody>`;
+
+  coveredList.forEach((epic, i) => {
+    h += `<tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);text-align:center">${i+1}</td>
+      <td style="font-weight:500;color:var(--text-primary)">${epic}</td>
+      <td><span class="sbadge b-resolved" style="background:rgba(31,143,94,0.1);color:var(--d-green);border:1px solid rgba(31,143,94,0.25)">✓ Covered</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:4px;background:var(--border);border-radius:2px">
+            <div style="width:100%;height:100%;background:var(--d-green);border-radius:2px"></div>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--d-green);min-width:28px">100%</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  for(let i=0; i<notCoveredCount; i++){
+    const num = cov.covered + i + 1;
+    h += `<tr style="opacity:0.55">
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);text-align:center">${num}</td>
+      <td style="color:var(--text-muted);font-style:italic">— Not yet assigned —</td>
+      <td><span class="sbadge b-open" style="background:rgba(226,35,26,0.07);color:var(--d-red);border:1px solid rgba(226,35,26,0.2)">✗ Not Covered</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:4px;background:var(--border);border-radius:2px">
+            <div style="width:0%;height:100%;background:var(--d-red);border-radius:2px"></div>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted);min-width:28px">0%</span>
+        </div>
+      </td>
+    </tr>`;
+  }
+
+  h += `</tbody></table>
+  <div class="tbl-foot"><span>${cov.covered} covered · ${notCoveredCount} pending · ${cov.total} total epics</span><span>Source: HBS_EpicCoverage_*.xlsx</span></div>`;
+  return h;
+}
+function loadProg(key){
+  const d=D[key]; if(!d) return;
+  _drillData = d;
+  document.querySelectorAll('.drill-panel').forEach(p=>p.classList.remove('open'));
+  $('p-bc').innerHTML=`<span onclick="showOv()">Dashboard</span><span class="sep">›</span><span onclick="showOv()">${d.rt} RT</span><span class="sep">›</span><span class="cur">${fmtKey(key)}</span>`;
+  $('p-ico').textContent=fmtKey(key).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  $('p-title').textContent=fmtKey(key);
+  $('p-meta').textContent=`${d.rt} RT  ·  ${d.sprint}  ·  ${d.version}`;
+  renderKPIs(d); renderExec(d); renderIPD(d); renderPRD(d); renderBR(d); renderTC(d);
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.querySelectorAll('.tab-content').forEach((t,i)=>t.classList.toggle('active',i===0));
+  showProg();
+}
+
+function fmtKey(k){return k.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());}
+
+// ── RT OVERVIEW CARDS (computed from data) ──
+function renderRTCards(){
+  const rts=[
+    {key:'sc', label:'Smart City',      sub:'4 programmes',       cls:'sc', progs:['city-suite','community-suite','cognitive-suite','proj-validations'], betaPlanned:3, betaExecuted:0},
+    {key:'si', label:'Sys Integrations',sub:'3 programmes',       cls:'si', progs:['ebi-lenel','ebi-connected-power','custom-apps'],                      betaPlanned:0, betaExecuted:0},
+    {key:'ap', label:'Airports',        sub:'1 programme · Alpha',cls:'ap', progs:['airports-terminal'],                                                   betaPlanned:0, betaExecuted:0},
+  ];
+  let html='';
+  rts.forEach(rt=>{
+    const progs = rt.progs.map(k=>D[k]).filter(Boolean);
+    // aggregate
+    const resolved = progs.reduce((s,d)=>s+d.ipd.filter(x=>x.status==='resolved').length,0);
+    const blocked  = progs.reduce((s,d)=>s+d.ipd.filter(x=>x.status==='blocked').length,0);
+    const ipdTotal = progs.reduce((s,d)=>s+d.ipd.length,0);
+    const open     = ipdTotal - resolved;
+    const prdOpen  = progs.reduce((s,d)=>s+d.prd.filter(x=>x.status!=='resolved').length,0);
+    const brTotal  = progs.reduce((s,d)=>s+d.br.length,0);
+    const brActive = progs.reduce((s,d)=>s+d.br.filter(x=>!x.resolved).length,0);
+    const tcPass   = progs.reduce((s,d)=>s+d.kpis.tc.pass,0);
+    const tcExec   = progs.reduce((s,d)=>s+d.kpis.tc.executed,0);
+    const tcTotal  = progs.reduce((s,d)=>s+d.kpis.tc.total,0);
+    const passRate = pct(tcPass, tcExec);
+    const cfp1     = progs.reduce((s,d)=>s+d.ipd.filter(x=>x.status==='open'&&x.sev==='critical').length,0);
+    const cfp2     = progs.reduce((s,d)=>s+d.ipd.filter(x=>x.status==='open'&&x.sev==='high').length,0);
+    const tcExecPct = pct(tcExec, tcTotal);
+    const prCol    = passRate>=90?'var(--d-green)':passRate>=75?'var(--d-amber)':'var(--d-red)';
+    const prdTotal = progs.reduce((s,d)=>s+d.prd.length,0);
+    const covCovered = progs.reduce((s,d)=>s+(d.coverage?d.coverage.covered:0),0);
+    const covTotal   = progs.reduce((s,d)=>s+(d.coverage?d.coverage.total:0),0);
+    const covPct     = pct(covCovered, covTotal);
+    const covCol     = covPct>=80?'var(--d-green)':covPct>=60?'var(--d-amber)':'var(--d-red)';
+    html+=`
+    <div class="rt-card ${rt.cls}${rt.key==='sc'?' selected':''}" onclick="selRT('${rt.key}')">
+      <div class="rt-card-hdr">
+        <div><div class="rt-card-name">${rt.label}</div><div class="rt-card-sub">${rt.sub}</div></div>
+      </div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
+
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:6px 9px;background:rgba(226,35,26,0.04);border-left:2px solid var(--d-red);border-radius:0 2px 2px 0">
+          <span style="font-size:10px;color:var(--text-secondary)">Defects</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--d-red)">${open} open <span style="font-size:10px;font-weight:400;color:var(--text-muted)">· ${resolved} resolved</span></span>
+        </div>
+
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:6px 9px;background:rgba(20,96,176,0.04);border-left:2px solid var(--d-cyan);border-radius:0 2px 2px 0">
+          <span style="font-size:10px;color:var(--text-secondary)">Test pass rate</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${prCol}">${passRate}% <span style="font-size:10px;font-weight:400;color:var(--text-muted)">of ${tcExec} executed · ${tcTotal} total</span></span>
+        </div>
+
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:6px 9px;background:rgba(212,146,10,0.04);border-left:2px solid var(--d-amber);border-radius:0 2px 2px 0">
+          <span style="font-size:10px;color:var(--text-secondary)">PRD defects open</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--d-amber)">${prdOpen} <span style="font-size:10px;font-weight:400;color:var(--text-muted)">of ${prdTotal} reported</span></span>
+        </div>
+
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:6px 9px;background:rgba(${covPct>=80?'31,143,94':covPct>=60?'212,146,10':'226,35,26'},0.04);border-left:2px solid ${covCol};border-radius:0 2px 2px 0">
+          <span style="font-size:10px;color:var(--text-secondary)">Epic coverage</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${covCol}">${covPct}% <span style="font-size:10px;font-weight:400;color:var(--text-muted)">${covCovered} of ${covTotal} epics covered</span></span>
+        </div>
+
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:6px 9px;background:${brTotal>0?'rgba(226,35,26,0.04)':'rgba(0,0,0,0.02)'};border-left:2px solid ${brTotal>0?'var(--d-red)':'var(--border)'};border-radius:0 2px 2px 0">
+          <span style="font-size:10px;color:var(--text-secondary)">Build rejections</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${brTotal>0?'var(--d-red)':'var(--text-muted)'}">${brTotal} received <span style="font-size:10px;font-weight:400;color:var(--text-muted)">· ${brActive} rejected · ${brTotal-brActive} passed</span></span>
+        </div>
+
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:6px 9px;background:rgba(0,0,0,0.02);border-left:2px solid var(--border);border-radius:0 2px 2px 0">
+          <span style="font-size:10px;color:var(--text-secondary)">Beta programme</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--text-muted)">${rt.betaPlanned} <span style="font-size:10px;font-weight:400;color:var(--text-muted)">planned · ${rt.betaExecuted} executed</span></span>
+        </div>
+
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted)">CFP</span>
+        ${cfp1>0?`<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;background:rgba(226,35,26,0.08);color:var(--d-red);border:1px solid rgba(226,35,26,0.2);padding:1px 6px;border-radius:2px">CFP-1 · ${cfp1}</span>`:''}
+        ${cfp2>0?`<span style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;background:rgba(232,99,10,0.08);color:var(--d-orange);border:1px solid rgba(232,99,10,0.2);padding:1px 6px;border-radius:2px">CFP-2 · ${cfp2}</span>`:''}
+        ${cfp1===0&&cfp2===0?`<span style="font-size:9px;color:var(--d-green);font-family:'Barlow Condensed',sans-serif;font-weight:700">No critical issues</span>`:''}
+      </div>
+    </div>`;
+  });
+  if($('rt-cards')) $('rt-cards').innerHTML = html;
+}
+
+// ── KPIs ──
+function renderKPIs(d){
+  const k=d.kpis;
+
+  // Derive open/blocked/inReview counts directly from actual ipd rows
+  const ipdOpen    = d.ipd.filter(x=>x.status==='open').length;
+  const ipdBlocked = d.ipd.filter(x=>x.status==='blocked').length;
+  const ipdReview  = d.ipd.filter(x=>x.status==='in-progress').length;
+  const ipdResolved= d.ipd.filter(x=>x.status==='resolved').length;
+  const ipdTotal   = d.ipd.length;
+
+  // Derive CFP buckets from STRICTLY OPEN IPD rows only (not blocked/in-progress)
+  const openIPD = d.ipd.filter(x=>x.status==='open');
+  const cfp1 = openIPD.filter(x=>x.sev==='critical').length;
+  const cfp2 = openIPD.filter(x=>x.sev==='high').length;
+  const cfp3 = openIPD.filter(x=>x.sev==='medium').length;
+  const cfp4 = openIPD.filter(x=>x.sev==='low').length;
+  const cfpTotal = cfp1+cfp2+cfp3+cfp4;
+
+  const totalP=k.prd.open+k.prd.resolved;
+  const pr=pct(k.tc.pass,k.tc.executed); const er=pct(k.tc.executed,k.tc.total);
+
+  // Build rejection: count from actual br array
+  const brTotal   = d.br.length;
+  const brActive  = d.br.filter(x=>!x.resolved).length;
+  const brResolved= d.br.filter(x=>x.resolved).length;
+
+  // Coverage
+  const cov = d.coverage || {covered:0,total:0,epics:[]};
+  const covPct = pct(cov.covered, cov.total);
+  const covCol = covPct>=80?'var(--d-green)':covPct>=60?'var(--d-amber)':'var(--d-red)';
+  const covTrend = covPct>=80?'ok':covPct>=60?'warn':'bad';
+
+  $('p-kpis').innerHTML=`
+    <div class="kpi-card" onclick="goTab('in-progress-defects')">
+      <div class="kpi-top"><div class="kpi-trend tr-bad">${ipdOpen} open</div></div>
+      <div class="kpi-val" style="color:var(--d-red)">${ipdOpen}</div>
+      <div class="kpi-lbl">Open Defects</div>
+      <div class="kpi-sub">${ipdResolved} resolved · ${ipdTotal} total</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:${pct(ipdResolved,Math.max(ipdTotal,1))}%;background:var(--d-green)"></div></div>
+    </div>
+    <div class="kpi-card" onclick="goTab('prd-defects')">
+      <div class="kpi-top"><div class="kpi-trend tr-${k.prd.new>0?'bad':'warn'}">${k.prd.new>0?'+'+k.prd.new+' new':'No new'}</div></div>
+      <div class="kpi-val" style="color:var(--d-amber)">${k.prd.open}</div>
+      <div class="kpi-lbl">PRD Defects</div>
+      <div class="kpi-sub">${k.prd.resolved} resolved · ${totalP} total</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:${pct(k.prd.resolved,Math.max(totalP,1))}%;background:var(--d-amber)"></div></div>
+    </div>
+    <div class="kpi-card" onclick="goTab('build-rejection')">
+      <div class="kpi-top"><div class="kpi-trend tr-${brActive>0?'bad':'ok'}">${brActive} rejected</div></div>
+      <div class="kpi-val" style="color:${brTotal===0?'var(--d-green)':brActive>0?'var(--d-red)':'var(--d-green)'}">${brTotal}</div>
+      <div class="kpi-lbl">Build Rejections</div>
+      <div class="kpi-sub">${brTotal} received · ${brActive} rejected · ${brTotal-brActive} passed</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:${brTotal===0?100:pct(brTotal-brActive,brTotal)}%;background:var(--d-green)"></div></div>
+    </div>
+    <div class="kpi-card" onclick="goTab('test-cases')">
+      <div class="kpi-top"><div class="kpi-trend tr-${pr>=90?'ok':pr>=75?'warn':'bad'}">${pr}% pass</div></div>
+      <div class="kpi-val">${k.tc.total}</div>
+      <div class="kpi-lbl">Test Cases</div>
+      <div class="kpi-sub">${k.tc.executed} executed · ${k.tc.fail} failed · ${k.tc.skip} skipped</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:${er}%;background:var(--d-cyan)"></div></div>
+    </div>
+    <div class="kpi-card" onclick="goTab('in-progress-defects')">
+      <div class="kpi-top">
+        <div class="kpi-trend tr-${cfp1>0?'bad':'ok'}">${cfp1>0?cfp1+' Critical':'No Critical'}</div>
+      </div>
+      <div class="kpi-val">${cfpTotal}</div>
+      <div class="kpi-lbl">CFP Levels</div>
+      <div class="kpi-sub">Open defects by severity</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px">
+        ${[
+          ['CFP-1',cfp1,'var(--d-red)',   'rgba(226,35,26,0.08)','rgba(226,35,26,0.2)', 'Critical'],
+          ['CFP-2',cfp2,'var(--d-orange)','rgba(232,99,10,0.08)', 'rgba(232,99,10,0.2)', 'High'],
+          ['CFP-3',cfp3,'var(--d-amber)', 'rgba(212,146,10,0.08)','rgba(212,146,10,0.2)','Medium'],
+          ['CFP-4',cfp4,'var(--d-grey)',  'rgba(122,127,142,0.08)','rgba(122,127,142,0.2)','Low'],
+        ].filter(([,val])=>val>0).map(([lbl,val,col,bg,bdr,sev])=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;background:${bg};border:1px solid ${bdr};border-radius:2px;padding:4px 8px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:${col}">${lbl} <span style="font-weight:400;color:var(--text-muted);font-size:9px">${sev}</span></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${col}">${val}</span>
+          </div>`).join('')}
+        ${cfpTotal===0?`<div style="text-align:center;padding:6px;font-size:10px;color:var(--d-green);font-family:'Barlow Condensed',sans-serif;font-weight:700">✓ No open defects</div>`:''}
+      </div>
+    </div>
+    <div class="kpi-card" onclick="goTab('coverage')">
+      <div class="kpi-top">
+        <div class="kpi-trend tr-${covTrend}">${cov.covered}/${cov.total} covered</div>
+      </div>
+      <div class="kpi-val" style="color:${covCol}">${covPct}%</div>
+      <div class="kpi-lbl">Test Coverage</div>
+      <div class="kpi-sub">${cov.covered} of ${cov.total} features covered</div>
+      <div class="kpi-bar"><div class="kpi-fill" style="width:${covPct}%;background:${covCol}"></div></div>
+    </div>`;
+}
+
+function pct(a,b){return Math.round((a/Math.max(b,1))*100);}
+
+// ── TEST EXEC RINGS ──
+function renderExec(d){
+  const k=d.kpis.tc;
+  const cards=[
+    {lbl:'Executed', p:pct(k.executed,k.total),    v:k.executed,  tot:k.total,   col:'var(--d-cyan)'},
+    {lbl:'Passed',   p:pct(k.pass,k.executed),      v:k.pass,      tot:k.executed,col:'var(--d-green)'},
+    {lbl:'Failed',   p:pct(k.fail,k.executed),      v:k.fail,      tot:k.executed,col:'var(--d-red)'},
+    {lbl:'Skipped',  p:pct(k.skip,k.total),         v:k.skip,      tot:k.total,   col:'var(--d-grey)'},
+  ];
+  $('p-exec').innerHTML=cards.map(c=>{
+    const r=28,circ=2*Math.PI*r,dash=(c.p/100)*circ;
+    return `<div class="exec-card">
+      <div class="ring-wrap"><svg width="66" height="66" viewBox="0 0 66 66">
+        <circle cx="33" cy="33" r="${r}" fill="none" stroke="var(--border)" stroke-width="5.5"/>
+        <circle cx="33" cy="33" r="${r}" fill="none" stroke="${c.col}" stroke-width="5.5"
+          stroke-dasharray="${Math.max(dash-1.5,0)} ${circ-Math.max(dash-1.5,0)}" stroke-linecap="round"/>
+      </svg>
+      <div class="ring-center"><div class="ring-pct" style="color:${c.col}">${c.p}%</div></div></div>
+      <div class="exec-name">${c.lbl}</div>
+      <div class="exec-stats"><span style="color:var(--text-primary);font-weight:600">${c.v}</span><span>/ ${c.tot}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ── IN-PROGRESS DEFECTS ──
+function renderIPD(d){
+  const items=d.ipd;
+  const stats=[['open','Open','b-open'],['resolved','Resolved','b-resolved']];
+  let h=`<div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap">
+    ${stats.map(([s,l,cls])=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)"><span class="sbadge ${cls}">${l}</span>${items.filter(x=>x.status===s).length}</div>`).join('')}
+  </div>
+  <table class="tbl"><thead><tr><th>ID</th><th>Title</th><th>Severity</th><th>Status</th><th>Owner</th><th>Sprint</th><th>Age</th></tr></thead><tbody>`;
+  items.forEach(x=>{
+    h+=`<tr><td><span class="id-lnk">${x.id}</span></td><td style="max-width:260px;color:var(--text-primary)">${x.title}</td>
+      <td><span class="svbadge sv-${x.sev}">${x.sev.toUpperCase()}</span></td>
+      <td><span class="sbadge b-${x.status.replace(' ','-')}">${x.status.replace('-',' ')}</span></td>
+      <td>${x.owner}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${x.sprint}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${x.age>14?'var(--d-red)':x.age>7?'var(--d-amber)':'var(--text-secondary)'}">${x.age}d${x.age>14?' ⚠':''}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table><div class="tbl-foot"><span>${items.length} defects</span><span>Source: HBS_InProgress_Defects_*.xlsx</span></div>`;
+  $('c-ipd').innerHTML=h;
+}
+
+// ── PRD DEFECTS (with CFP panel) ──
+function renderPRD(d){
+  const items=d.prd; const c=d.kpis.cfp;
+  const cfpTotal=c.cfp1+c.cfp2+c.cfp3+c.cfp4;
+  const cats=[
+    {key:'CFP-1',val:c.cfp1,col:'var(--d-red)',   desc:'Critical defect — must fix immediately, safety/functional failure'},
+    {key:'CFP-2',val:c.cfp2,col:'var(--d-orange)','desc':'Major defect — affects performance or reliability'},
+    {key:'CFP-3',val:c.cfp3,col:'var(--d-amber)', desc:'Minor defect — cosmetic or low-impact issue'},
+    {key:'CFP-4',val:c.cfp4,col:'var(--d-grey)',  desc:'Very minor / informational defect — no functional impact'},
+  ];
+  let h=`<div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:1px">Customer-Facing Problems (CFP)</div>
+        <div style="font-size:11px;color:var(--text-secondary)">${cfpTotal} total CFP defect${cfpTotal!==1?'s':''} across 4 categories</div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--text-primary)">${cfpTotal} <span style="font-size:11px;font-weight:400;color:var(--text-muted)">total</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      ${cats.map(cat=>`
+        <div style="background:#fff;border:1px solid var(--border);border-left:3px solid ${cat.col};border-radius:2px;padding:10px 12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:${cat.col}">${cat.key}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:${cat.val>0?cat.col:'var(--text-muted)'};line-height:1">${cat.val}</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);line-height:1.4">${cat.desc}</div>
+        </div>`).join('')}
+    </div>
+  </div>
+  <table class="tbl"><thead><tr><th>PRD ID</th><th>Title</th><th>CFP Category</th><th>Severity</th><th>Status</th><th>Reported By</th><th>Date Raised</th></tr></thead><tbody>`;
+  if(!items.length) h+=`<tr><td colspan="7" style="text-align:center;padding:26px;color:var(--text-muted)">✅ No PRD defects on record</td></tr>`;
+  else items.forEach(x=>{
+    const cfpCol=x.cfp==='CFP-1'?'var(--d-red)':x.cfp==='CFP-2'?'var(--d-orange)':x.cfp==='CFP-3'?'var(--d-amber)':'var(--d-grey)';
+    h+=`<tr><td><span class="id-lnk">${x.id}</span></td><td style="max-width:240px;color:var(--text-primary)">${x.title}</td>
+      <td><span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:${cfpCol};background:${cfpCol.replace(')',',0.07)').replace('var(','rgba(').replace(')',')')};border:1px solid ${cfpCol.replace(')',',0.2)').replace('var(','rgba(').replace(')',')')};padding:2px 6px;border-radius:2px">${x.cfp||'—'}</span></td>
+      <td><span class="svbadge sv-${x.sev}">${x.sev.toUpperCase()}</span></td>
+      <td><span class="sbadge b-${x.status.replace(' ','-')}">${x.status.replace('-',' ')}</span></td>
+      <td>${x.by}</td><td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${x.date}</td></tr>`;
+  });
+  h+=`</tbody></table><div class="tbl-foot"><span>${items.length} PRD defects</span><span>Source: HBS_PRD_Defects_*.xlsx</span></div>`;
+  $('c-prd').innerHTML=h;
+}
+
+// ── BUILD REJECTION ──
+function renderBR(d){
+  const items=d.br;
+  if(!items.length){$('c-br').innerHTML=`<div class="empty"><div class="empty-ico">✅</div><div class="empty-txt">No Build Rejections — All builds passed QA gates</div></div>`;return;}
+  let h=`<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px">`;
+  items.forEach(r=>{
+    const bc=r.resolved?'rgba(31,143,94,0.07)':'rgba(226,35,26,0.06)';
+    const bdr=r.resolved?'rgba(31,143,94,0.2)':'rgba(226,35,26,0.2)';
+    h+=`<div style="background:${bc};border:1px solid ${bdr};border-radius:3px;padding:11px 14px;min-width:205px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="id-lnk">${r.build}</span>
+        <span class="sbadge ${r.resolved?'b-resolved':'b-open'}">${r.resolved?'Resolved':'Active'}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-primary);margin-bottom:4px">${r.reason}</div>
+      <div style="font-size:9px;color:var(--text-muted)">By: ${r.by} · ${r.date}</div>
+    </div>`;
+  });
+  h+=`</div><table class="tbl"><thead><tr><th>Build</th><th>Date</th><th>Rejection Reason</th><th>Rejected By</th><th>Status</th></tr></thead><tbody>`;
+  items.forEach(r=>{
+    h+=`<tr><td><span class="id-lnk">${r.build}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${r.date}</td>
+      <td style="color:var(--text-primary)">${r.reason}</td><td>${r.by}</td>
+      <td><span class="sbadge ${r.resolved?'b-resolved':'b-open'}">${r.resolved?'Resolved':'Active'}</span></td></tr>`;
+  });
+  h+=`</tbody></table><div class="tbl-foot"><span>${items.length} rejection(s)</span><span>Source: HBS_BuildRejection_*.xlsx</span></div>`;
+  $('c-br').innerHTML=h;
+}
+
+// ── TEST CASES ──
+function renderTC(d){
+  const ss=d.tc;
+  let h=`<table class="tbl"><thead><tr><th>Suite ID</th><th>Test Suite</th><th>Total</th><th>Executed</th><th>Passed</th><th>Failed</th><th>Skipped</th><th>Pass Rate</th><th>Last Run</th></tr></thead><tbody>`;
+  ss.forEach(s=>{
+    const pr=pct(s.pass,s.pass+s.fail); const er=pct(s.pass+s.fail+s.skip,s.total);
+    const prc=pr>=90?'var(--d-green)':pr>=75?'var(--d-amber)':'var(--d-red)';
+    h+=`<tr><td><span class="id-lnk">${s.id}</span></td>
+      <td style="color:var(--text-primary);font-weight:500">${s.suite}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px">${s.total}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px">${s.pass+s.fail+s.skip}</span>
+        <div style="flex:1;height:2px;background:var(--border);border-radius:1px;min-width:44px"><div style="width:${er}%;height:100%;background:var(--d-cyan);border-radius:1px"></div></div>
+        <span style="font-size:9px;color:var(--text-muted)">${er}%</span>
+      </div></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--d-green)">✓ ${s.pass}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${s.fail>0?'var(--d-red)':'var(--text-muted)'}">${s.fail>0?'✗ ':''}${s.fail}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted)">${s.skip}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:4px;background:var(--border);border-radius:2px;min-width:44px"><div style="width:${pr}%;height:100%;background:${prc};border-radius:2px"></div></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:${prc};min-width:30px">${pr}%</span>
+      </div></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted)">${s.run}</td>
+    </tr>`;
+  });
+  const tot=ss.reduce((a,s)=>({total:a.total+s.total,pass:a.pass+s.pass,fail:a.fail+s.fail,skip:a.skip+s.skip}),{total:0,pass:0,fail:0,skip:0});
+  const tpr=pct(tot.pass,tot.pass+tot.fail);
+  h+=`<tr style="background:var(--bg-primary)">
+    <td colspan="2" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--text-secondary)">TOTAL</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600">${tot.total}</td><td></td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--d-green)">✓ ${tot.pass}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--d-red)">✗ ${tot.fail}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted)">${tot.skip}</td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${tpr>=90?'var(--d-green)':tpr>=75?'var(--d-amber)':'var(--d-red)'}">${tpr}%</span></td><td></td>
+  </tr>`;
+  h+=`</tbody></table><div class="tbl-foot"><span>${ss.length} suites · ${tot.total} cases</span><span>Source: HBS_TestCases_*.xlsx</span></div>`;
+  $('c-tc').innerHTML=h;
+}
+
+// ── HEALTH SCORE ENGINE ──
+function computeRTHealth(progs){
+  // Returns 0-100 health score + dimension scores
+  const passRate   = pct(progs.reduce((s,d)=>s+d.kpis.tc.pass,0), progs.reduce((s,d)=>s+d.kpis.tc.executed,0));
+  const execRate   = pct(progs.reduce((s,d)=>s+d.kpis.tc.executed,0), progs.reduce((s,d)=>s+d.kpis.tc.total,0));
+  const open       = progs.reduce((s,d)=>s+d.ipd.filter(x=>x.status!=='resolved').length,0);
+  const total      = progs.reduce((s,d)=>s+d.ipd.length,0);
+  const resolved   = total - open;
+  const resRate    = total===0 ? 100 : pct(resolved,total);
+  const brTotal    = progs.reduce((s,d)=>s+d.br.length,0);
+  const brActive   = progs.reduce((s,d)=>s+d.br.filter(x=>!x.resolved).length,0);
+  const buildScore = brTotal===0 ? 100 : Math.max(0, 100 - brActive*25);
+  const cfp1       = progs.reduce((s,d)=>s+d.kpis.cfp.cfp1,0);
+  const cfp2       = progs.reduce((s,d)=>s+d.kpis.cfp.cfp2,0);
+  const cfpScore   = Math.max(0, 100 - cfp1*15 - cfp2*5);
+  const covCov     = progs.reduce((s,d)=>s+(d.coverage?d.coverage.covered:0),0);
+  const covTot     = progs.reduce((s,d)=>s+(d.coverage?d.coverage.total:0),0);
+  const covScore   = covTot===0 ? 100 : pct(covCov,covTot);
+  // Weighted composite
+  const composite  = Math.round(passRate*0.30 + resRate*0.20 + buildScore*0.25 + cfpScore*0.15 + covScore*0.10);
+  return {composite, passRate, execRate, resRate, buildScore, cfpScore, covScore, open, brActive, cfp1, cfp2};
+}
+
+function healthGrade(score){
+  if(score>=90) return {label:'EXCELLENT',col:'var(--d-green)'};
+  if(score>=75) return {label:'GOOD',     col:'var(--d-green)'};
+  if(score>=60) return {label:'FAIR',     col:'var(--d-amber)'};
+  if(score>=40) return {label:'AT RISK',  col:'var(--d-orange)'};
+  return              {label:'CRITICAL',  col:'var(--d-red)'};
+}
+
+function drawArc(svgEl, score, col, W, H){
+  // Semicircle gauge: circle center sits at bottom-center of SVG viewport
+  // Arc runs from left (180deg) to right (0deg) = top half of circle
+  const cx = W / 2;
+  const cy = H - 2;        // center near bottom edge so only top half is visible
+  const r  = H - 16;       // radius fits within SVG height with stroke room
+  const stroke = 12;
+
+  const fullCirc = 2 * Math.PI * r;
+  const halfCirc = Math.PI * r;         // visible semicircle length
+  const fillLen  = (score / 100) * halfCirc;
+
+  // stroke-dashoffset shifts start to 9-o'clock (left end of semicircle)
+  // dashoffset = 3/4 of full circumference puts start at leftmost point
+  const offset = fullCirc * 0.75;
+
+  svgEl.innerHTML =
+    '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+    ' stroke="var(--border)" stroke-width="' + stroke + '"' +
+    ' stroke-dasharray="' + halfCirc + ' ' + (fullCirc - halfCirc) + '"' +
+    ' stroke-dashoffset="-' + offset + '" stroke-linecap="butt"/>' +
+
+    '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
+    ' stroke="' + col + '" stroke-width="' + stroke + '"' +
+    ' stroke-dasharray="' + fillLen + ' ' + (fullCirc - fillLen) + '"' +
+    ' stroke-dashoffset="-' + offset + '" stroke-linecap="round"' +
+    ' style="transition:stroke-dasharray 0.8s ease"/>' +
+
+    '<text x="' + (cx - r + 2) + '" y="' + (cy + 14) + '"' +
+    ' font-size="8" fill="var(--text-muted)" font-family="Barlow Condensed" text-anchor="middle">0</text>' +
+    '<text x="' + (cx + r - 2) + '" y="' + (cy + 14) + '"' +
+    ' font-size="8" fill="var(--text-muted)" font-family="Barlow Condensed" text-anchor="middle">100</text>' +
+    '<text x="' + cx + '" y="' + (cy - r - 6) + '"' +
+    ' font-size="8" fill="var(--text-muted)" font-family="Barlow Condensed" text-anchor="middle">50</text>';
+}
+
+function drawSmallRing(size, score, col){
+  const r=(size-8)/2, cx=size/2, cy=size/2;
+  const circ=2*Math.PI*r;
+  const dash=(score/100)*circ;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="5"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="5"
+      stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${circ/4}"
+      style="transform:rotate(-90deg);transform-origin:${cx}px ${cy}px;transition:stroke-dasharray 0.8s ease"/>
+  </svg>`;
+}
+
+// ── OVERVIEW RENDER ──
+function renderOverview(){
+  const allProgs = Object.values(D);
+  const allH = computeRTHealth(allProgs);
+  const g = healthGrade(allH.composite);
+
+  // Org score tile
+  $('ov-score-tile').style.background = g.col;
+  $('ov-org-score').textContent = allH.composite;
+  $('ov-org-grade').textContent = g.label;
+
+  // Pulse metrics
+  const tcPass   = allProgs.reduce((s,d)=>s+d.kpis.tc.pass,0);
+  const tcExec   = allProgs.reduce((s,d)=>s+d.kpis.tc.executed,0);
+  const tcTotal  = allProgs.reduce((s,d)=>s+d.kpis.tc.total,0);
+  const openDef  = allProgs.reduce((s,d)=>s+d.ipd.filter(x=>x.status!=='resolved').length,0);
+  const resDef   = allProgs.reduce((s,d)=>s+d.ipd.filter(x=>x.status==='resolved').length,0);
+  const prdOpen  = allProgs.reduce((s,d)=>s+d.prd.filter(x=>x.status!=='resolved').length,0);
+  const brActive = allProgs.reduce((s,d)=>s+d.br.filter(x=>!x.resolved).length,0);
+  const cfp1All  = allProgs.reduce((s,d)=>s+d.kpis.cfp.cfp1,0);
+  const cfp2All  = allProgs.reduce((s,d)=>s+d.kpis.cfp.cfp2,0);
+  const pr = pct(tcPass, tcExec);
+  const prCol = pr>=90?'var(--d-green)':pr>=75?'var(--d-amber)':'var(--d-red)';
+
+  const sparkDefects = [20,28,34,29,25,openDef];
+  const sparkPass    = [76,78,80,82,83,pr];
+
+  const pulses = [
+    {lbl:'Pass Rate',   val:pr+'%',  sub:`${tcPass} / ${tcExec} executed`,   col:'var(--d-green)', pcls:'pc-green',
+     spark:sparkPass, sparkCol:'var(--d-green)', sparkMax:100},
+    {lbl:'Open Defects',val:openDef, sub:`${resDef} resolved this cycle`,    col:'var(--d-red)',   pcls:'pc-red',
+     spark:sparkDefects, sparkCol:'var(--d-red)', sparkMax:40},
+    {lbl:'PRD Open',    val:prdOpen, sub:`Customer-facing issues`,           col:prdOpen>5?'var(--d-red)':'var(--d-amber)', pcls:'pc-amber',
+     spark:[8,11,9,12,10,prdOpen], sparkCol:'var(--d-amber)', sparkMax:15},
+    {lbl:'Build Rejections', val:brActive, sub:`Active gates failing`,       col:brActive>0?'var(--d-red)':'var(--d-green)', pcls:brActive>0?'pc-red':'pc-green',
+     spark:[2,3,4,2,3,brActive], sparkCol:'var(--d-red)', sparkMax:5},
+    {lbl:'CFP-1 Critical', val:cfp1All, sub:`+${cfp2All} CFP-2 high`,       col:cfp1All>0?'var(--d-red)':'var(--d-green)', pcls:cfp1All>0?'pc-red':'pc-green',
+     spark:[5,7,8,6,5,cfp1All], sparkCol:'var(--d-red)', sparkMax:10},
+    {lbl:'Test Coverage', val:pct(allProgs.reduce((s,d)=>s+(d.coverage?d.coverage.covered:0),0),allProgs.reduce((s,d)=>s+(d.coverage?d.coverage.total:0),0))+'%',
+     sub:'Epic-level coverage', col:'var(--d-cyan)', pcls:'pc-cyan',
+     spark:[55,60,62,64,67,parseInt(pct(allProgs.reduce((s,d)=>s+(d.coverage?d.coverage.covered:0),0),allProgs.reduce((s,d)=>s+(d.coverage?d.coverage.total:0),0)))],
+     sparkCol:'var(--d-cyan)', sparkMax:100},
+    {lbl:'Test Cases Total', val:tcTotal.toLocaleString(), sub:`${pct(tcExec,tcTotal)}% executed`,
+     col:'var(--d-blue)', pcls:'pc-blue',
+     spark:[900,1020,1100,1150,1220,tcTotal], sparkCol:'var(--d-blue)', sparkMax:tcTotal+200},
+    {lbl:'Programmes', val:Object.keys(D).length, sub:'Across all Release Trains',
+     col:'var(--text-secondary)', pcls:'pc-blue',
+     spark:[5,6,7,7,8,Object.keys(D).length], sparkCol:'var(--d-blue)', sparkMax:10},
+  ];
+
+  $('ov-pulse').innerHTML = pulses.map(p=>{
+    const bars = p.spark.map(v=>{
+      const h = Math.max(3, Math.round((v/p.sparkMax)*28));
+      return `<div class="ov-pulse-bar" style="height:${h}px;background:${p.sparkCol}"></div>`;
+    }).join('');
+    return `<div class="ov-pulse-card ${p.pcls}">
+      <div class="ov-pulse-lbl">${p.lbl}</div>
+      <div class="ov-pulse-val" style="color:${p.col}">${p.val}</div>
+      <div class="ov-pulse-sub">${p.sub}</div>
+      <div class="ov-pulse-sparkline">${bars}</div>
+    </div>`;
+  }).join('');
+
+  // RT health cards
+  const rts = [
+    {key:'sc', label:'Smart City',       sub:'4 programmes', cls:'rt-sc', progs:['city-suite','community-suite','cognitive-suite','proj-validations'], col:'var(--d-cyan)'},
+    {key:'si', label:'Sys Integrations', sub:'3 programmes', cls:'rt-si', progs:['ebi-lenel','ebi-connected-power','custom-apps'],                    col:'var(--d-purple)'},
+    {key:'ap', label:'Airports',         sub:'1 programme',  cls:'rt-ap', progs:['airports-terminal'],                                                col:'var(--d-grey)'},
+  ];
+
+  $('ov-rt-health').innerHTML = rts.map(rt=>{
+    const progs = rt.progs.map(k=>D[k]).filter(Boolean);
+    const h = computeRTHealth(progs);
+    const g = healthGrade(h.composite);
+    const ring = drawSmallRing(68, h.composite, g.col);
+
+    const dims = [
+      {lbl:'Test Pass',  val:h.passRate+'%',  score:h.passRate,  col:h.passRate>=90?'var(--d-green)':h.passRate>=75?'var(--d-amber)':'var(--d-red)'},
+      {lbl:'Resolution', val:h.resRate+'%',   score:h.resRate,   col:h.resRate>=80?'var(--d-green)':h.resRate>=60?'var(--d-amber)':'var(--d-red)'},
+      {lbl:'Build Gate', val:h.buildScore+'', score:h.buildScore,col:h.buildScore>=75?'var(--d-green)':h.buildScore>=50?'var(--d-amber)':'var(--d-red)'},
+      {lbl:'Coverage',   val:h.covScore+'%',  score:h.covScore,  col:h.covScore>=80?'var(--d-green)':h.covScore>=60?'var(--d-amber)':'var(--d-red)'},
+    ];
+
+    const dimsHtml = dims.map(d=>`
+      <div class="ov-rt-dim">
+        <div class="ov-rt-dim-lbl">${d.lbl}</div>
+        <div class="ov-rt-dim-bar"><div class="ov-rt-dim-fill" style="width:${d.score}%;background:${d.col}"></div></div>
+        <div class="ov-rt-dim-val" style="color:${d.col}">${d.val}</div>
+      </div>`).join('');
+
+    const alerts = [];
+    if(h.cfp1>0) alerts.push(`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(226,35,26,0.08);color:var(--d-red);border:1px solid rgba(226,35,26,0.2);padding:1px 5px;border-radius:2px">CFP-1·${h.cfp1}</span>`);
+    if(h.brActive>0) alerts.push(`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(226,35,26,0.08);color:var(--d-red);border:1px solid rgba(226,35,26,0.2);padding:1px 5px;border-radius:2px">BUILD·${h.brActive}</span>`);
+    if(h.open>0) alerts.push(`<span style="font-family:'JetBrains Mono',monospace;font-size:9px;background:rgba(212,146,10,0.08);color:var(--d-amber);border:1px solid rgba(212,146,10,0.2);padding:1px 5px;border-radius:2px">OPEN·${h.open}</span>`);
+
+    return `<div class="ov-rt-card ${rt.cls}" onclick="selRT('${rt.key}')">
+      <div class="ov-rt-top">
+        <div>
+          <div class="ov-rt-name">${rt.label}</div>
+          <div class="ov-rt-sub">${rt.sub}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${alerts.join('')}</div>
+        </div>
+        <div class="ov-health-ring">
+          ${ring}
+          <div class="ov-health-ring-center">
+            <div class="ov-health-score" style="color:${g.col}">${h.composite}</div>
+            <div class="ov-health-label" style="color:${g.col}">${g.label}</div>
+          </div>
+        </div>
+      </div>
+      <div class="ov-rt-dims">${dimsHtml}</div>
+      <div class="ov-rt-footer">
+        <span class="ov-rt-prog">${rt.sub} · ${h.open} open defects</span>
+        <span class="ov-rt-cta">View detail →</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── OVERVIEW CHARTS ──
+function renderOvBar(){
+  const rtCols = {sc:'var(--d-cyan)', si:'var(--d-purple)', ap:'var(--d-grey)'};
+  const rtKeys = Object.keys(TREND).length ? Object.keys(TREND) : ['sc','si','ap'];
+
+  // Collect all sprint labels in order
+  const sprintSet = new Set();
+  rtKeys.forEach(k => { if(TREND[k]) Object.keys(TREND[k].sprints).forEach(s => sprintSet.add(s)); });
+  const sprints = Array.from(sprintSet).sort().slice(-6); // last 6
+
+  const allCounts = sprints.map(sp => rtKeys.reduce((sum,k)=>sum+(TREND[k]?.sprints[sp]||0),0));
+  const mx = Math.max(...allCounts, 1);
+
+  $('ov-bar').innerHTML = sprints.map(sp => {
+    const segs = rtKeys.map(k => {
+      const v = TREND[k]?.sprints[sp] || 0;
+      const h = Math.round((v/mx)*100);
+      return `<div class="bar-seg" style="height:${h}px;background:${rtCols[k]||'var(--d-grey)'}" title="${TREND[k]?.name||k}: ${v}"></div>`;
+    }).join('');
+    const tot = rtKeys.reduce((s,k)=>s+(TREND[k]?.sprints[sp]||0),0);
+    return `<div class="bar-group">
+      <div class="bar-tot">${tot}</div>
+      <div class="bar-stack">${segs}</div>
+      <div class="bar-lbl">${sp}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderOvDonut(){
+  const data=[
+    {l:'Critical',v:12,c:'var(--d-red)'},
+    {l:'High',    v:28,c:'var(--d-orange)'},
+    {l:'Medium',  v:35,c:'var(--d-amber)'},
+    {l:'Low',     v:5, c:'var(--d-cyan)'},
+  ];
+  const total=data.reduce((a,x)=>a+x.v,0);
+  const r=40,cx=48,cy=48,circ=2*Math.PI*r;
+  let off=0,paths='';
+  data.forEach(x=>{
+    const d=(x.v/total)*circ;
+    paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${x.c}" stroke-width="11"
+      stroke-dasharray="${d-1.5} ${circ-d+1.5}" stroke-dashoffset="${-off}"
+      style="transform:rotate(-90deg);transform-origin:${cx}px ${cy}px"/>`;
+    off+=d;
+  });
+  const svg=`<svg width="96" height="96" viewBox="0 0 96 96">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="11"/>
+    ${paths}
+    <text x="${cx}" y="${cy-1}" text-anchor="middle" fill="var(--text-primary)" font-size="13" font-family="Barlow Condensed" font-weight="800">${total}</text>
+    <text x="${cx}" y="${cy+11}" text-anchor="middle" fill="var(--text-muted)" font-size="6" font-family="Barlow Condensed" letter-spacing="1.5">DEFECTS</text>
+  </svg>`;
+  const leg=data.map(x=>`<div class="leg-item"><div class="leg-dot" style="background:${x.c}"></div><span>${x.l}</span><span class="leg-val">${x.v}</span></div>`).join('');
+  $('ov-donut').innerHTML=svg+`<div class="donut-legend">${leg}</div>`;
+}
+
+function renderOvMatrix(){
+  const progs=['City Suite','Community','Cognitive','EBI-LENEL','EBI Power','Custom'];
+  const builds=['b05','b06','b07','b08','b09'];
+  const mx=[[0,0,0,0,0],[0,0,1,0,0],[0,1,1,2,2],[0,0,1,0,2],[0,0,1,0,0],[0,0,0,0,1]];
+  const bg=['rgba(31,143,94,0.1)','rgba(212,146,10,0.1)','rgba(226,35,26,0.12)'];
+  const fg=['var(--d-green)','var(--d-amber)','var(--d-red)'];
+  const lb=['✓','!','✗'];
+  let h=`<div style="display:grid;grid-template-columns:80px ${builds.map(()=>'1fr').join(' ')};gap:2px;font-size:9px">`;
+  h+=`<div class="mx-hdr" style="font-size:8px"></div>`+builds.map(b=>`<div class="mx-hdr" style="font-size:8px">${b}</div>`).join('');
+  progs.forEach((p,pi)=>{
+    h+=`<div class="mx-row-lbl" style="font-size:9px;padding-right:4px">${p}</div>`;
+    mx[pi].forEach((v,bi)=>{
+      h+=`<div class="mx-cell" style="height:22px;background:${bg[v]};color:${fg[v]};font-size:10px" title="${p} · ${builds[bi]}: ${v===0?'Passed':v===1?'Rejected':'Critical'}">${lb[v]}</div>`;
+    });
+  });
+  h+=`</div><div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+    ${[[0,'Passed'],[1,'Rejected'],[2,'Critical']].map(([v,t])=>
+      `<div style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--text-muted)">
+        <div style="width:14px;height:14px;background:${bg[v]};color:${fg[v]};border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:JetBrains Mono,monospace">${lb[v]}</div>${t}
+      </div>`).join('')}
+  </div>`;
+  $('ov-matrix').innerHTML=h;
+}
+
+function updateTs(){$('ts').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function exportData(){alert('Export: HBS_InProgress_Defects_[Programme]_[Sprint].xlsx\nHBS_PRD_Defects_[Programme].xlsx\nHBS_BuildRejection_[Programme].xlsx\nHBS_TestCases_[Programme]_[Sprint].xlsx');}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  updateTs(); setInterval(updateTs,1000);
+  loadData();
+});
+</script>
+
+
+</html>
